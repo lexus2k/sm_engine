@@ -1,3 +1,4 @@
+/*
 BSD 3-Clause License
 
 Copyright (c) 2020, Aleksei Dynda
@@ -27,3 +28,32 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+#pragma once
+
+
+#ifndef SM_ENGINE_MULTITHREAD
+#if defined(__AVR__)
+    #define SM_ENGINE_MULTITHREAD 0
+#else
+    #define SM_ENGINE_MULTITHREAD 1
+#endif
+#endif
+
+#ifndef SM_ENGINE_USE_STL
+#if defined(__AVR__)
+    #define SM_ENGINE_USE_STL 0
+#else
+    #define SM_ENGINE_USE_STL 1
+#endif
+#endif
+
+#ifndef SM_ENGINE_DYNAMIC_ALLOC
+#if defined(__AVR__)
+    #define SM_ENGINE_DYNAMIC_ALLOC 0
+#else
+    #define SM_ENGINE_DYNAMIC_ALLOC 1
+#endif
+#endif
+

@@ -1,3 +1,4 @@
+/*
 BSD 3-Clause License
 
 Copyright (c) 2020, Aleksei Dynda
@@ -27,3 +28,45 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+#pragma once
+
+#include "sme_config.h"
+
+#if SM_ENGINE_USE_STL
+
+#include <stack>
+namespace sme {
+
+template <typename T>
+using stack = std::stack<T>;
+
+}
+#else
+
+namespace sme {
+
+static constexpr int MAX_STACK_EL = 4;
+
+template <typename T>
+class stack
+{
+public:
+    stack() {}
+
+    void push( T e ) { if ( m_ptr < MAX_STACK_EL - 1) m_elem[++m_ptr] = e; }
+
+    void pop() { if ( m_ptr >=0 ) m_ptr--; }
+
+    T &top() { return m_ptr < 0 ? m_elem[0] : m_elem[m_ptr]; }
+
+    bool empty() { return m_ptr < 0; }
+
+private:
+    T m_elem[MAX_STACK_EL];
+    int m_ptr = -1;
+};
+
+}
+#endif
