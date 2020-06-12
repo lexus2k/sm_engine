@@ -30,54 +30,38 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#pragma once
-
-#include "../sme/config.h"
-
+#include "sme/engine.h"
+#include "sme/state.h"
+#include "sm_engine_logger.h"
 #if SM_ENGINE_USE_STL
-
-#include <list>
-namespace sme {
-
-template <typename T>
-using list = std::list<T>;
-
-}
-#else
-
-namespace sme {
-
-static constexpr int MAX_LIST_EL = 4;
-
-template <typename T>
-class list
-{
-public:
-    list() {}
-
-    void push_back( T e ) { if ( m_ptr < MAX_LIST_EL) m_elem[m_ptr++] = e; }
-
-    T* begin() { return &m_elem[0]; }
-
-    T* end() { return &m_elem[m_ptr]; }
-
-    void clear() { m_ptr = 0; }
-
-    int size() { return m_ptr; }
-
-    T * erase(T *el)
-    {
-        for (int i = el - m_elem; i < m_ptr - 1; i++) m_elem[i] = m_elem[i+1];
-        if ( m_ptr ) m_ptr--;
-        return el;
-    }
-
-    bool empty() { return m_ptr == 0; }
-
-private:
-    T m_elem[MAX_LIST_EL];
-    int m_ptr = 0;
-};
-
-}
+#include <chrono>
 #endif
+
+#define MAX_APP_QUEUE_SIZE   10
+
+static const char* TAG = "SME";
+
+SmEngine::~SmEngine()
+{
+    m_states.clear();
+}
+
+void SmEngine::add_state(ISmeState &state)
+{
+    register_state( state, false );
+}
+
+void SmEngine::register_state(ISmeState &state, bool auto_allocated)
+{
+    SmStateInfo info =
+    {
+        .state = &state,
+#if SM_ENGINE_DYNAMIC_ALLOC
+        .auto_allocated = auto_allocated
+#endif
+    };
+    state.setParent( this );
+    m_states.emplace_back( info );
+    SmStateInfo end = { nullptr };
+    m_states.push_back( end );
+}

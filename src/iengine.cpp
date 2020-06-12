@@ -30,8 +30,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "sm_engine.h"
-#include "sme_state.h"
+#include "sme/iengine.h"
+#include "sme/state.h"
 #include "sm_engine_logger.h"
 #if SM_ENGINE_USE_STL
 #include <chrono>
@@ -41,26 +41,27 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static const char* TAG = "SME";
 
-SmEngine::~SmEngine()
+ISmEngine::~ISmEngine()
 {
-    for (auto i: m_states)
+    const SmStateInfo *state = m_states;
+    while ( state->state != nullptr )
     {
 #if SM_ENGINE_DYNAMIC_ALLOC
-        if (i.auto_allocated)
+        if (state->auto_allocated)
         {
-            delete i.state;
+            delete state->state;
         }
 #endif
+        state++;
     }
-    m_states.clear();
 }
 
-bool SmEngine::send_event(SEventData event)
+bool ISmEngine::sendEvent(SEventData event)
 {
-    return send_delayed_event(event, 0);
+    return sendEvent(event, 0);
 }
 
-bool SmEngine::send_delayed_event(SEventData event, uint32_t ms)
+bool ISmEngine::sendEvent(SEventData event, uint32_t ms)
 {
     __SDeferredEventData ev =
     {
@@ -83,7 +84,7 @@ bool SmEngine::send_delayed_event(SEventData event, uint32_t ms)
     return true;
 }
 
-void SmEngine::loop(uint32_t event_wait_timeout_ms)
+void ISmEngine::loop(uint32_t event_wait_timeout_ms)
 {
     set_wait_event_timeout( event_wait_timeout_ms );
     while (!m_stopped)
@@ -92,27 +93,33 @@ void SmEngine::loop(uint32_t event_wait_timeout_ms)
     }
 }
 
-EEventResult SmEngine::process_app_event(SEventData &event)
+EEventResult ISmEngine::process_app_event(SEventData &event)
 {
     ESP_LOGD( TAG, "Processing event: %02X", event.event );
-    EEventResult result = on_event( event );
-    if ( result != EEventResult::PROCESSED_AND_HOOKED && m_active )
+    STransitionData status = onEvent( event );
+    if ( status.result == EEventResult::NOT_PROCESSED && m_active )
     {
-        EEventResult state_result = m_active->on_event( event );
-        if ( state_result != EEventResult::NOT_PROCESSED )
-        {
-            result = state_result;
-        }
+        status = m_active->onEvent( event );
     }
-    if ( result == EEventResult::NOT_PROCESSED )
+    if ( status.result == EEventResult::NOT_PROCESSED )
     {
         ESP_LOGW(TAG, "Event is not processed: %i, %X",
                  event.event, event.arg );
     }
-    return result;
+    else
+    {
+        switch ( status.result )
+        {
+            case EEventResult::SWITCH_STATE: switch_state( status.stateId ); break;
+            case EEventResult::PUSH_STATE: push_state( status.stateId ); break;
+            case EEventResult::POP_STATE: pop_state(); break;
+            default: break;
+        };
+    }
+    return status.result;
 }
 
-void SmEngine::wait_for_next_event()
+void ISmEngine::wait_for_next_event()
 {
 #if SM_ENGINE_MULTITHREAD
     std::unique_lock<std::mutex> lock( m_mutex );
@@ -122,7 +129,7 @@ void SmEngine::wait_for_next_event()
 }
 
 
-void SmEngine::update()
+void ISmEngine::update()
 {
     on_update();
 
@@ -155,43 +162,29 @@ void SmEngine::update()
         ESP_LOGE(TAG, "Initial state is not specified!");
 }
 
-EEventResult SmEngine::on_event(SEventData event)
+STransitionData ISmEngine::onEvent(SEventData event)
 {
-    return EEventResult::NOT_PROCESSED;
+    return { EEventResult::NOT_PROCESSED, SM_STATE_ANY };
 }
 
-void SmEngine::on_update()
+void ISmEngine::on_update()
 {
 }
 
-void SmEngine::add_state(ISmeState &state)
-{
-    register_state( state, false );
-}
-
-void SmEngine::register_state(ISmeState &state, bool auto_allocated)
-{
-    SmStateInfo info =
-    {
-        .state = &state,
-        .auto_allocated = auto_allocated
-    };
-    state.set_parent( this );
-    m_states.push_back( info );
-}
-
-bool SmEngine::begin()
+bool ISmEngine::begin()
 {
     bool result = on_begin();
     if ( result )
     {
-        for ( auto i: m_states )
+        const SmStateInfo * state = m_states;
+        while ( state->state != nullptr )
         {
-            result = i.state->begin();
+            result = state->state->begin();
             if ( !result )
             {
                 break;
             }
+            state++;
         }
     }
     m_last_update_time_ms = get_micros();
@@ -199,65 +192,83 @@ bool SmEngine::begin()
     return result;
 }
 
-bool SmEngine::on_begin()
+bool ISmEngine::begin( StateUid id )
+{
+    bool result = begin();
+    if ( result )
+    {
+        result = switch_state( id );
+    }
+    return result;
+}
+
+bool ISmEngine::on_begin()
 {
     return true;
 }
 
-void SmEngine::end()
+void ISmEngine::end()
 {
     if (m_active)
     {
         m_active->exit();
     }
-    for (auto i: m_states)
+    const SmStateInfo * state = m_states;
+    while ( state->state != nullptr )
     {
-        i.state->end();
+        state->state->end();
+        state++;
     };
     on_end();
 }
 
-void SmEngine::on_end()
+void ISmEngine::on_end()
 {
 }
 
-ISmeState *SmEngine::getById(uint8_t id)
+ISmeState *ISmEngine::getById(StateUid id)
 {
-    for (auto i: m_states)
+    const SmStateInfo * state = m_states;
+    while ( state->state != nullptr )
     {
-        if ( i.state->get_id() == id )
+        if ( state->state->getId() == id )
         {
-            return i.state;
+            return state->state;
         }
+        state++;
     };
     return nullptr;
 }
 
-bool SmEngine::switch_state(uint8_t id)
+bool ISmEngine::switch_state(StateUid id)
 {
+    if ( id == SM_STATE_NONE )
+    {
+        return true;
+    }
     ISmeState * newState = getById( id );
     if ( newState )
     {
         if ( m_active )
         {
-            if ( m_active->get_id() == id )
+            if ( m_active->getId() == id )
             {
                 return false;
             }
             m_active->exit();
         }
-        ESP_LOGI(TAG, "Switching to state %s", newState->get_name());
+        ESP_LOGI(TAG, "Switching to state %s", newState->getName());
         m_active = newState;
 
         m_state_start_ts = get_micros();
         m_active->enter();
-        force_set_id( id );
+        forceSetId( id );
         return true;
     }
     return false;
 }
 
-bool SmEngine::push_state(uint8_t new_state)
+bool ISmEngine::push_state(StateUid new_state)
 {
     m_stack.push(m_active);
     bool result = switch_state(new_state);
@@ -273,14 +284,14 @@ bool SmEngine::push_state(uint8_t new_state)
     return result;
 }
 
-bool SmEngine::pop_state()
+bool ISmEngine::pop_state()
 {
     bool result = false;
     if (!m_stack.empty())
     {
         auto state = m_stack.top();
         m_stack.pop();
-        result = switch_state(state->get_id());
+        result = switch_state(state->getId());
         if (!result)
         {
             m_stack.push(state);
@@ -293,7 +304,7 @@ bool SmEngine::pop_state()
     return result;
 }
 
-uint64_t SmEngine::get_micros()
+uint64_t ISmEngine::get_micros()
 {
 #if SM_ENGINE_USE_STL
     return std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()).time_since_epoch().count();
@@ -302,17 +313,17 @@ uint64_t SmEngine::get_micros()
 #endif
 }
 
-bool SmEngine::timeout_event(uint64_t timeout, bool generate_event)
+bool ISmEngine::timeoutEvent(uint64_t timeout, bool generate_event)
 {
     bool event = static_cast<uint64_t>( get_micros() - m_state_start_ts ) >= timeout;
     if ( event && generate_event )
     {
-         send_event( { SM_EVENT_TIMEOUT, static_cast<uintptr_t>(timeout) } );
+         sendEvent( { SM_EVENT_TIMEOUT, static_cast<uintptr_t>(timeout) } );
     }
     return event;
 }
 
-void SmEngine::reset_timeout()
+void ISmEngine::resetTimeout()
 {
     m_state_start_ts = get_micros();
 }

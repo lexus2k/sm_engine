@@ -32,52 +32,60 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include "../sme/config.h"
+#include "../sme/istate.h"
+#include "../sme/state.h"
+#include "../sme/iengine.h"
+#include "../containers/stack.h"
+#include "../containers/list.h"
 
-#if SM_ENGINE_USE_STL
+#if SM_ENGINE_MULTITHREAD
+#include <mutex>
+#include <condition_variable>
+#endif
 
-#include <list>
-namespace sme {
+#include <vector>
+#include <stdint.h>
 
-template <typename T>
-using list = std::list<T>;
-
-}
-#else
-
-namespace sme {
-
-static constexpr int MAX_LIST_EL = 4;
-
-template <typename T>
-class list
+class SmEngine: public ISmEngine
 {
 public:
-    list() {}
+    SmEngine(int max_queue_size = 10)
+        : ISmEngine( &m_states[0], max_queue_size )
+    {}
 
-    void push_back( T e ) { if ( m_ptr < MAX_LIST_EL) m_elem[m_ptr++] = e; }
+    ~SmEngine();
 
-    T* begin() { return &m_elem[0]; }
+    /**
+     * @brief registers new state in state machine memory
+     *
+     * Registers new state in state machine memory
+     *
+     * @param state reference to SmState-based object
+     */
+    void add_state(ISmeState &state);
 
-    T* end() { return &m_elem[m_ptr]; }
-
-    void clear() { m_ptr = 0; }
-
-    int size() { return m_ptr; }
-
-    T * erase(T *el)
+#if SM_ENGINE_DYNAMIC_ALLOC
+    /**
+     * @brief registers new state in state machine memory
+     *
+     * Registers new state in state machine memory. SmState-based
+     * object will be automatically allocated and freed by state machine
+     *
+     */
+    template <class T>
+    void add_state(StateUid id = SM_STATE_NONE)
     {
-        for (int i = el - m_elem; i < m_ptr - 1; i++) m_elem[i] = m_elem[i+1];
-        if ( m_ptr ) m_ptr--;
-        return el;
+        T *p = new T();
+        if ( id != SM_STATE_NONE )
+        {
+            p->setId( id );
+        }
+        register_state( *p, true );
     }
-
-    bool empty() { return m_ptr == 0; }
+#endif
 
 private:
-    T m_elem[MAX_LIST_EL];
-    int m_ptr = 0;
-};
+    std::vector<SmStateInfo> m_states{};
 
-}
-#endif
+    void register_state(ISmeState &state, bool auto_allocated);
+};

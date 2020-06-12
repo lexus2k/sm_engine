@@ -32,52 +32,32 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include "../sme/config.h"
+#include "../sme/state.h"
+#include "../sme/event.h"
+#include "../sme/state_uid.h"
 
-#if SM_ENGINE_USE_STL
 
-#include <list>
-namespace sme {
+typedef void (*TSmeFunction)(void);
+typedef STransitionData (*TSmeTable)(StateUid, SEventData);
 
-template <typename T>
-using list = std::list<T>;
-
-}
-#else
-
-namespace sme {
-
-static constexpr int MAX_LIST_EL = 4;
-
-template <typename T>
-class list
+template <TSmeFunction enterFunc, TSmeFunction updateFunc, TSmeFunction exitFunc, TSmeTable table>
+class GenericState: public SmState
 {
 public:
-    list() {}
-
-    void push_back( T e ) { if ( m_ptr < MAX_LIST_EL) m_elem[m_ptr++] = e; }
-
-    T* begin() { return &m_elem[0]; }
-
-    T* end() { return &m_elem[m_ptr]; }
-
-    void clear() { m_ptr = 0; }
-
-    int size() { return m_ptr; }
-
-    T * erase(T *el)
-    {
-        for (int i = el - m_elem; i < m_ptr - 1; i++) m_elem[i] = m_elem[i+1];
-        if ( m_ptr ) m_ptr--;
-        return el;
-    }
-
-    bool empty() { return m_ptr == 0; }
+    GenericState(const char *name): SmState( name ) { }
+    GenericState(StateUid uid, const char *name = nullptr): SmState( name ) { setId( uid ); }
 
 private:
-    T m_elem[MAX_LIST_EL];
-    int m_ptr = 0;
+    void enter() override final { enterFunc(); }
+    void update() override final { updateFunc(); }
+    void exit() override final { exitFunc(); }
+    STransitionData onEvent(SEventData event) override final { return table( getId(), event); }
 };
 
+namespace sme
+{
+    static inline void NO_ENTER() { }
+    static inline void NO_UPDATE() { }
+    static inline void NO_EXIT() { }
+    static inline void NO_FUNC() { }
 }
-#endif

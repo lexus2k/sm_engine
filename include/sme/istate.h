@@ -33,32 +33,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <stdint.h>
-#include "sme_config.h"
+#include "../sme/config.h"
+#include "../sme/state_uid.h"
+#include "../sme/event.h"
+#include "../sme/transition.h"
 
-#define SM_EVENT_TIMEOUT   0xFF
-
-#define SM_STATE_NONE      0xFF
-
-#define SM_EVENT_ARG_ANY   UINTPTR_MAX
-
-enum class EEventResult: uint8_t
-{
-    NOT_PROCESSED,
-    PROCESSED,
-    PROCESSED_AND_HOOKED,
-};
+class ISmeState;
 
 typedef struct
 {
-    uint8_t event;
-    uintptr_t arg;
-} SEventData;
+    ISmeState *state;
+#if SM_ENGINE_DYNAMIC_ALLOC
+    bool auto_allocated;
+#endif
+} SmStateInfo;
 
-typedef struct
-{
-    SEventData event;
-    uint32_t micros;
-} __SDeferredEventData;
+#define STATE_LIST_ITEM(x) { &x }
+
+#define STATE_LIST_END { nullptr }
 
 class ISmeState
 {
@@ -93,47 +85,28 @@ public:
     virtual void exit() { }
 
     /**
-     * on_event method is called, when new event arrives in active state
+     * onEvent method is called, when new event arrives in active state
      */
-    virtual EEventResult on_event(SEventData event) { return EEventResult::NOT_PROCESSED; }
+    virtual STransitionData onEvent(SEventData event) { return { EEventResult::NOT_PROCESSED, SM_STATE_NONE }; }
 
     /**
      * Returns state id
      */
-    uint8_t get_id() { return m_id; }
+    StateUid getId() { return m_id; }
 
     /**
      * Returns state name
      */
-    const char *get_name() { return m_name; }
+    const char *getName() { return m_name; }
 
     /**
      * Sets state id. Id is changed only if it was not previously specified for the state.
      */
-    void set_id(uint8_t id) { if ( m_id == SM_STATE_NONE ) m_id = id; }
+    void setId(StateUid id) { if ( m_id == SM_STATE_NONE ) m_id = id; }
 
-    void set_parent( ISmeState * parent ) { m_parent = parent; }
+    void setParent( ISmeState * parent ) { m_parent = parent; }
 
 protected:
-
-    /**
-     * Initiates switching to new state. The method doesn't guarantuee immediate state switch
-     * @param new_state state to switch to.
-     * @return true if successful
-     */
-    virtual bool switch_state(uint8_t new_state) { return m_parent ? m_parent->switch_state( new_state ) : false; }
-
-    /**
-     * Returns from current state to state saved to stack
-     */
-    virtual bool pop_state() { return m_parent ? m_parent->pop_state() : false; }
-
-    /**
-     * Switches to new state and remembers current state in stack
-     * @param new_state state to switch to.
-     * @return true if successful
-     */
-    virtual bool push_state(uint8_t new_state) { return m_parent ? m_parent->push_state( new_state ) : false; }
 
     /**
      * @brief sends event state machine event queue
@@ -142,7 +115,7 @@ protected:
      *
      * @param event event to put to queue
      */
-    virtual bool send_event(SEventData event) { return m_parent ? m_parent->send_event( event ) : false; }
+    virtual bool sendEvent(SEventData event) { return m_parent ? m_parent->sendEvent( event ) : false; }
 
     /**
      * Returns timestamp in microseconds, since system is up
@@ -156,23 +129,23 @@ protected:
      * @param generate_event true if state machine timeout event should be generated
      * @return true if timeout, false otherwise
      */
-    virtual bool timeout_event(uint64_t timeout, bool generate_event = false)
+    virtual bool timeoutEvent(uint64_t timeout, bool generate_event = false)
     {
-        return m_parent ? m_parent->timeout_event( timeout, generate_event ) : false;
+        return m_parent ? m_parent->timeoutEvent( timeout, generate_event ) : false;
     }
 
     /**
      * Resets internal state timer
      */
-    virtual void reset_timeout() { if (m_parent) m_parent->reset_timeout(); }
+    virtual void resetTimeout() { if (m_parent) m_parent->resetTimeout(); }
 
-    void force_set_id(uint8_t id) { m_id = id; }
+    void forceSetId(StateUid id) { m_id = id; }
 
 private:
 
-    uint8_t m_id = SM_STATE_NONE;
+    StateUid m_id = SM_STATE_NONE;
 
-    const char * m_name;
+    const char * m_name = nullptr;
 
     ISmeState * m_parent = nullptr;
 };

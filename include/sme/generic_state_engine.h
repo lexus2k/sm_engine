@@ -32,11 +32,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include "sme_interface.h"
+#include "../sme/iengine.h"
+#include "../sme/generic_state.h"
+#include "../sme/state_uid.h"
 
-class SmState: public ISmeState
+template <TSmeTable table>
+class GenericStateEngine: public ISmEngine
 {
 public:
-    SmState(const char *name): ISmeState( name ) { }
+    GenericStateEngine(SmStateInfo *states): ISmEngine(states) { }
+
+private:
+    STransitionData onEvent(SEventData event) override final { return table( getId(), event); }
 };
 

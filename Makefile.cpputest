@@ -28,25 +28,19 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-default: all
+.PHONY: unittest check clean_unittest
 
-.PHONY: all unittest check clean
+OBJ_UNIT_TEST = \
+        unittest/static_tests.o \
+        unittest/main.o \
 
-CPPFLAGS += -I./include -I./src \
-    -DSM_ENGINE_MULTITHREAD=1 \
-    -DSM_ENGINE_USE_STL=1 \
-    -DSM_ENGINE_DYNAMIC_ALLOC=1
+unittest: all $(OBJ_UNIT_TEST)
+	$(CXX) $(CPPFLAGS) -o unit_test $(OBJ_UNIT_TEST) -L. -lm -pthread -lsm_engine -lCppUTest -lCppUTestExt
 
-OBJS=src/iengine.o src/engine.o \
+check: unittest
+	./unit_test
 
+clean: clean_unittest
 
-all: $(OBJS)
-	$(AR) rcs libsm_engine.a $(OBJS)
-
-clean:
-	@rm -rf $(OBJS) libsm_engine.a
-
-# ================================== Unit Tests ==============================
-
-include Makefile.cpputest
-
+clean_unittest:
+	rm -rf $(OBJ_UNIT_TEST) $(OBJ_UNIT_TEST:.o=.gcno) $(OBJ_UNIT_TEST:.o=.gcda) ./unit_test

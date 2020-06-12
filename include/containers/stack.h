@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include "sme_config.h"
+#include "../sme/config.h"
 
 #if SM_ENGINE_USE_STL
 
