@@ -49,11 +49,4 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 #endif
 
-#ifndef SM_ENGINE_DYNAMIC_ALLOC
-#if defined(__AVR__)
-    #define SM_ENGINE_DYNAMIC_ALLOC 0
-#else
-    #define SM_ENGINE_DYNAMIC_ALLOC 1
-#endif
-#endif
 

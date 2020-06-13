@@ -43,7 +43,7 @@ class ISmeState;
 typedef struct
 {
     ISmeState *state;
-#if SM_ENGINE_DYNAMIC_ALLOC
+#if SM_ENGINE_USE_STL
     bool auto_allocated;
 #endif
 } SmStateInfo;
@@ -72,7 +72,7 @@ public:
     /**
      * enter function is called, when state is being activated
      */
-    virtual void enter() { }
+    virtual void enter(SEventData *event) { }
 
     /**
      * update() is called in loop, when state is active
@@ -82,7 +82,7 @@ public:
     /**
      * exit function is called, when state is being deactivated.
      */
-    virtual void exit() { }
+    virtual void exit(SEventData *event) { }
 
     /**
      * onEvent method is called, when new event arrives in active state

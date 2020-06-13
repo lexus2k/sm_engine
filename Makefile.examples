@@ -28,7 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-.PHONY: example_switch clean_examples
+.PHONY: example_switch clean_examples examples
 
 OBJ_EXAMPLE1 = \
         examples/esp32_main_wrapper.o \
@@ -36,6 +36,8 @@ OBJ_EXAMPLE1 = \
 
 example_switch: all $(OBJ_EXAMPLE1)
 	$(CXX) $(CPPFLAGS) -o switch $(OBJ_EXAMPLE1) -L. -lm -pthread -lsm_engine
+
+examples: example_switch
 
 clean: clean_examples
 

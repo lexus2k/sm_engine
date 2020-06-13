@@ -37,13 +37,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../sme/iengine.h"
 #include "../containers/stack.h"
 #include "../containers/list.h"
+#include "../containers/vector.h"
 
 #if SM_ENGINE_MULTITHREAD
 #include <mutex>
 #include <condition_variable>
 #endif
 
-#include <vector>
 #include <stdint.h>
 
 class SmEngine: public ISmEngine
@@ -64,7 +64,7 @@ public:
      */
     void add_state(ISmeState &state);
 
-#if SM_ENGINE_DYNAMIC_ALLOC
+#if SM_ENGINE_USE_STL
     /**
      * @brief registers new state in state machine memory
      *
@@ -85,7 +85,7 @@ public:
 #endif
 
 private:
-    std::vector<SmStateInfo> m_states{};
+    sme::vector<SmStateInfo> m_states{};
 
     void register_state(ISmeState &state, bool auto_allocated);
 };

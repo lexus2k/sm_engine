@@ -33,22 +33,50 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include "../sme/config.h"
-#include <stdint.h>
 
-#define SM_EVENT_TIMEOUT   0xFF
+#if SM_ENGINE_USE_STL
 
-#define SM_EVENT_ARG_ANY   UINTPTR_MAX
+#include <vector>
+namespace sme {
 
-typedef uint8_t StateUid;
+template <typename T>
+using vector = std::vector<T>;
 
-typedef struct
+}
+#else
+
+namespace sme {
+
+static constexpr int MAX_VECTOR_EL = 4;
+
+template <typename T>
+class vector
 {
-    uint8_t event;
-    uintptr_t arg;
-} SEventData;
+public:
+    vector() {}
 
-typedef struct
-{
-    SEventData event;
-    uint32_t micros;
-} __SDeferredEventData;
+    void push_back( T &e ) { if ( m_ptr < MAX_VECTOR_EL) m_elem[m_ptr++] = e; }
+
+    T* begin() { return &m_elem[0]; }
+
+    T* end() { return &m_elem[m_ptr]; }
+
+    void clear() { m_ptr = 0; }
+
+    int size() { return m_ptr; }
+
+    bool empty() { return m_ptr == 0; }
+
+    void emplace_back( T &e ) { if ( m_ptr < MAX_VECTOR_EL) m_elem[m_ptr] = e; }
+
+    T& operator[] (int n) { return m_elem[n]; }
+
+    const T& operator[] (int n) const { return m_elem[n]; }
+
+private:
+    T m_elem[MAX_VECTOR_EL];
+    int m_ptr = 0;
+};
+
+}
+#endif

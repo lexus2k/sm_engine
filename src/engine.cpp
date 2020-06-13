@@ -56,7 +56,7 @@ void SmEngine::register_state(ISmeState &state, bool auto_allocated)
     SmStateInfo info =
     {
         .state = &state,
-#if SM_ENGINE_DYNAMIC_ALLOC
+#if SM_ENGINE_USE_STL
         .auto_allocated = auto_allocated
 #endif
     };

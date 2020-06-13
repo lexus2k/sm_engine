@@ -110,9 +110,9 @@ EEventResult ISmEngine::process_app_event(SEventData &event)
     {
         switch ( status.result )
         {
-            case EEventResult::SWITCH_STATE: switch_state( status.stateId ); break;
-            case EEventResult::PUSH_STATE: push_state( status.stateId ); break;
-            case EEventResult::POP_STATE: pop_state(); break;
+            case EEventResult::SWITCH_STATE: switch_state( status.stateId, &event ); break;
+            case EEventResult::PUSH_STATE: push_state( status.stateId, &event ); break;
+            case EEventResult::POP_STATE: pop_state( &event ); break;
             default: break;
         };
     }
@@ -197,7 +197,7 @@ bool ISmEngine::begin( StateUid id )
     bool result = begin();
     if ( result )
     {
-        result = switch_state( id );
+        result = switch_state( id, nullptr );
     }
     return result;
 }
@@ -211,7 +211,7 @@ void ISmEngine::end()
 {
     if (m_active)
     {
-        m_active->exit();
+        m_active->exit( nullptr );
     }
     const SmStateInfo * state = m_states;
     while ( state->state != nullptr )
@@ -240,7 +240,7 @@ ISmeState *ISmEngine::getById(StateUid id)
     return nullptr;
 }
 
-bool ISmEngine::switch_state(StateUid id)
+bool ISmEngine::switch_state(StateUid id, SEventData *event)
 {
     if ( id == SM_STATE_NONE )
     {
@@ -255,23 +255,23 @@ bool ISmEngine::switch_state(StateUid id)
             {
                 return false;
             }
-            m_active->exit();
+            m_active->exit(event);
         }
         ESP_LOGI(TAG, "Switching to state %s", newState->getName());
         m_active = newState;
 
         m_state_start_ts = get_micros();
-        m_active->enter();
+        m_active->enter( event );
         m_activeId = id;
         return true;
     }
     return false;
 }
 
-bool ISmEngine::push_state(StateUid new_state)
+bool ISmEngine::push_state(StateUid new_state, SEventData *event)
 {
     m_stack.push(m_active);
-    bool result = switch_state(new_state);
+    bool result = switch_state(new_state, event);
     if (!result)
     {
         m_stack.pop();
@@ -284,14 +284,14 @@ bool ISmEngine::push_state(StateUid new_state)
     return result;
 }
 
-bool ISmEngine::pop_state()
+bool ISmEngine::pop_state(SEventData *event)
 {
     bool result = false;
     if (!m_stack.empty())
     {
         auto state = m_stack.top();
         m_stack.pop();
-        result = switch_state( state->getId() );
+        result = switch_state( state->getId(), event );
         if (!result)
         {
             m_stack.push(state);

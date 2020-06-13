@@ -38,35 +38,39 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <thread>
 #include <chrono>
 
+// Here are our events
 enum
 {
     EVENT_BUTTON_PRESS,
 };
 
+// This is state unique ids
 enum
 {
     STATE_ON,
     STATE_OFF,
 };
 
+// Transition table for off state
 static C_TRANSITION_TBL(state1Table)
 {
     TRANSITION_SWITCH(EVENT_BUTTON_PRESS, SM_EVENT_ARG_ANY, sme::NO_FUNC, STATE_ON)
     TRANSITION_TBL_END
 }
 
+// Transition table for on state
 static C_TRANSITION_TBL(state2Table)
 {
     TRANSITION_SWITCH(EVENT_BUTTON_PRESS, SM_EVENT_ARG_ANY, sme::NO_FUNC, STATE_OFF)
     TRANSITION_TBL_END
 }
 
-void enterOnState()
+void enterOnState(SEventData *event)
 {
     fprintf( stderr, "Switch is turned On\n" );
 }
 
-void enterOffState()
+void enterOffState(SEventData *event)
 {
     fprintf( stderr, "Switch is turned Off\n" );
 }

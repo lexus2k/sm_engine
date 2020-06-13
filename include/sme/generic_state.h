@@ -38,9 +38,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 typedef void (*TSmeFunction)(void);
+typedef void (*TSmeEnterFunction)(SEventData *event);
 typedef STransitionData (*TSmeTable)(StateUid, SEventData);
 
-template <TSmeFunction enterFunc, TSmeFunction updateFunc, TSmeFunction exitFunc, TSmeTable table>
+template <TSmeEnterFunction enterFunc, TSmeFunction updateFunc, TSmeEnterFunction exitFunc, TSmeTable table>
 class GenericState: public SmState
 {
 public:
@@ -48,17 +49,17 @@ public:
     GenericState(StateUid uid, const char *name = nullptr): SmState( name ) { setId( uid ); }
 
 private:
-    void enter() override final { enterFunc(); }
+    void enter(SEventData *event) override final { enterFunc(event); }
     void update() override final { updateFunc(); }
-    void exit() override final { exitFunc(); }
+    void exit(SEventData *event) override final { exitFunc(event); }
     STransitionData onEvent(SEventData event) override final { return table( getId(), event); }
 };
 
 namespace sme
 {
-    static inline void NO_ENTER() { }
+    static inline void NO_ENTER(SEventData *event) { }
     static inline void NO_UPDATE() { }
-    static inline void NO_EXIT() { }
+    static inline void NO_EXIT(SEventData *event) { }
     static inline void NO_FUNC() { }
     static inline C_TRANSITION_TBL(NO_TABLE)
     {

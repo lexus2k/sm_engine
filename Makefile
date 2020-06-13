@@ -30,12 +30,24 @@
 
 default: all
 
-.PHONY: all unittest check clean
+.PHONY: all unittest check clean help
+
+SINGLE_THREAD ?= n
+USE_STL ?= y
 
 CPPFLAGS += -I./include -I./src \
-    -DSM_ENGINE_MULTITHREAD=1 \
-    -DSM_ENGINE_USE_STL=1 \
-    -DSM_ENGINE_DYNAMIC_ALLOC=1
+
+ifeq ($(SINGLE_THREAD),y)
+    CPPFLAGS += -DSM_ENGINE_MULTITHREAD=0
+else
+    CPPFLAGS += -DSM_ENGINE_MULTITHREAD=1
+endif
+
+ifeq ($(USE_STL),y)
+    CPPFLAGS += -DSM_ENGINE_USE_STL=1
+else
+    CPPFLAGS += -DSM_ENGINE_USE_STL=0
+endif
 
 OBJS=src/iengine.o src/engine.o \
 
@@ -45,6 +57,19 @@ all: $(OBJS)
 
 clean:
 	@rm -rf $(OBJS) libsm_engine.a
+
+help:
+	@echo ""
+	@echo "targets:"
+	@echo "    all                                builds library"
+	@echo "    unittest                           builds unit tests"
+	@echo "    check                              builds and run unit tests"
+	@echo "    examples                           builds examples"
+	@echo "available options: "
+	@echo "    SINGLE_THREAD    y/(n - default)   avoid using locks, assume that FSM is accessed in single thread"
+	@echo "    USE_STL          (y - default)/n   use standard stl classes (stack, vector, list)."
+	@echo "                                       The library allows to use internal minor implementation "
+	@echo "                                       for these classes on platforms that do not support STL"
 
 # ================================== Unit Tests ==============================
 

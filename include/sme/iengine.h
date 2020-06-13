@@ -210,7 +210,7 @@ private:
      *
      * @param new_state id of new state to switch to
      */
-    bool switch_state(StateUid new_state);
+    bool switch_state(StateUid new_state, SEventData *event);
 
     /**
      * @brief change current state to new one, but stores current state
@@ -221,7 +221,7 @@ private:
      *
      * @param new_state id of new state to switch to
      */
-    bool push_state(StateUid new_state);
+    bool push_state(StateUid new_state, SEventData *event);
 
     /**
      * @brief returns to last stored state.
@@ -229,5 +229,5 @@ private:
      * returns to last stored state.
      * @see push_state
      */
-    bool pop_state();
+    bool pop_state(SEventData *event);
 };
