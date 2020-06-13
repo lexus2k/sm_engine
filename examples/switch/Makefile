@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := simple_sm
+PROJECT_NAME := switch
 EXTRA_COMPONENT_DIRS := ./components
 
 include $(IDF_PATH)/make/project.mk

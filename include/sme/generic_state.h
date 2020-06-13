@@ -60,4 +60,8 @@ namespace sme
     static inline void NO_UPDATE() { }
     static inline void NO_EXIT() { }
     static inline void NO_FUNC() { }
+    static inline C_TRANSITION_TBL(NO_TABLE)
+    {
+        TRANSITION_TBL_END
+    }
 }

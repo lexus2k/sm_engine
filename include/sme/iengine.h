@@ -150,6 +150,9 @@ public:
      */
     ISmeState *getById(StateUid id);
 
+
+    StateUid getActiveId() { return m_activeId; }
+
 protected:
 
     /**
@@ -191,6 +194,7 @@ private:
     uint32_t m_last_update_time_ms = 0;
     uint64_t m_state_start_ts = 0;
     uint32_t m_event_wait_timeout_ms = 0;
+    StateUid m_activeId = SM_STATE_NONE;
 
     EEventResult process_app_event(SEventData &event);
 

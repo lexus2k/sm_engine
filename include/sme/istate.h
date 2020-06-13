@@ -139,8 +139,6 @@ protected:
      */
     virtual void resetTimeout() { if (m_parent) m_parent->resetTimeout(); }
 
-    void forceSetId(StateUid id) { m_id = id; }
-
 private:
 
     StateUid m_id = SM_STATE_NONE;

@@ -28,28 +28,16 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-default: all
+.PHONY: example_switch clean_examples
 
-.PHONY: all unittest check clean
+OBJ_EXAMPLE1 = \
+        examples/esp32_main_wrapper.o \
+        examples/switch/main/main.o \
 
-CPPFLAGS += -I./include -I./src \
-    -DSM_ENGINE_MULTITHREAD=1 \
-    -DSM_ENGINE_USE_STL=1 \
-    -DSM_ENGINE_DYNAMIC_ALLOC=1
+example_switch: all $(OBJ_EXAMPLE1)
+	$(CXX) $(CPPFLAGS) -o switch $(OBJ_EXAMPLE1) -L. -lm -pthread -lsm_engine
 
-OBJS=src/iengine.o src/engine.o \
+clean: clean_examples
 
-
-all: $(OBJS)
-	$(AR) rcs libsm_engine.a $(OBJS)
-
-clean:
-	@rm -rf $(OBJS) libsm_engine.a
-
-# ================================== Unit Tests ==============================
-
-include Makefile.cpputest
-
-# ================================== Examples ================================
-
-include Makefile.examples
+clean_examples:
+	rm -rf $(OBJ_EXAMPLE1) $(OBJ_EXAMPLE1:.o=.gcno) $(OBJ_EXAMPLE1:.o=.gcda) ./switch

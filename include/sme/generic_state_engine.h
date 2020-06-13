@@ -43,6 +43,6 @@ public:
     GenericStateEngine(SmStateInfo *states): ISmEngine(states) { }
 
 private:
-    STransitionData onEvent(SEventData event) override final { return table( getId(), event); }
+    STransitionData onEvent(SEventData event) override final { return table( getActiveId(), event); }
 };
 

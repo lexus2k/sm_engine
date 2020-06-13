@@ -6,6 +6,13 @@ State machine engine for small projects
 
 Arduino users, please copy all files from include directory to src, and use it as a standard arduino library
 
+## Simple C++ API
+
+## C API
+
+## C++ API
+
+
 ## License
 
 BSD 3-Clause License

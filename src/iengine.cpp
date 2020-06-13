@@ -262,7 +262,7 @@ bool ISmEngine::switch_state(StateUid id)
 
         m_state_start_ts = get_micros();
         m_active->enter();
-        forceSetId( id );
+        m_activeId = id;
         return true;
     }
     return false;
@@ -291,7 +291,7 @@ bool ISmEngine::pop_state()
     {
         auto state = m_stack.top();
         m_stack.pop();
-        result = switch_state(state->getId());
+        result = switch_state( state->getId() );
         if (!result)
         {
             m_stack.push(state);
