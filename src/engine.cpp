@@ -61,7 +61,17 @@ void SmEngine::registerState(ISmeState &state, bool autoAllocated)
 #endif
     };
     state.setParent( this );
-    m_states.emplace_back( info );
-    SmStateInfo end = { nullptr };
+    if ( m_states.size() == 0 )
+        m_states.push_back( info );
+    else
+        m_states.emplace_back( info );
+    SmStateInfo end =
+    {
+        nullptr,
+#if SM_ENGINE_USE_STL
+        false
+#endif
+    };
     m_states.push_back( end );
+    setStates( &m_states[0] );
 }

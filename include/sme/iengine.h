@@ -176,6 +176,8 @@ protected:
      */
     virtual void onEnd();
 
+    void setStates( const SmStateInfo *states ) { m_states = states; }
+
 private:
     ISmeState *m_active = nullptr;
 
