@@ -64,7 +64,7 @@ void SmEngine::registerState(ISmeState &state, bool autoAllocated)
     if ( m_states.size() == 0 )
         m_states.push_back( info );
     else
-        m_states.emplace_back( info );
+        m_states.back() = info;
     SmStateInfo end =
     {
         nullptr,

@@ -32,11 +32,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include <stdint.h>
 #include "../sme/config.h"
 #include "../sme/state_uid.h"
 #include "../sme/event.h"
 #include "../sme/transition.h"
+#include <stdint.h>
 
 class ISmeState;
 

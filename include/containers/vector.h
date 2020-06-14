@@ -67,7 +67,9 @@ public:
 
     bool empty() { return m_ptr == 0; }
 
-    void emplace_back( T &e ) { if ( m_ptr < MAX_VECTOR_EL) m_elem[m_ptr] = e; }
+// wrong:    void emplace_back( T &e ) { if ( m_ptr < MAX_VECTOR_EL) m_elem[m_ptr] = e; }
+
+    T& back() { return m_elem[m_ptr - 1]; }
 
     T& operator[] (int n) { return m_elem[n]; }
 

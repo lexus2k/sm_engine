@@ -76,7 +76,7 @@ bool ISmEngine::sendEvent(SEventData event, uint32_t ms)
         ESP_LOGE( TAG, "Failed to put new event: %02X", event.event );
         return false;
     }
-    ESP_LOGD( TAG, "New event arrived: %02X", event.event );
+    ESP_LOGI( TAG, "New event arrived: %02X", event.event );
     m_events.push_back( ev );
 #if SM_ENGINE_MULTITHREAD
     m_cond.notify_one();
@@ -101,6 +101,7 @@ EEventResult ISmEngine::processAppEvent(SEventData &event)
     {
         status = m_active->onEvent( event );
     }
+    ESP_LOGD( TAG, "Processing result 1: %02X", static_cast<uint8_t>(status.result) );
     if ( status.result == EEventResult::NOT_PROCESSED )
     {
         ESP_LOGW(TAG, "Event is not processed: %i, %X",
@@ -265,6 +266,7 @@ bool ISmEngine::switchState(StateUid id, SEventData *event)
         m_activeId = id;
         return true;
     }
+    ESP_LOGE(TAG, "Switching to state 0x%02X failed, state not found", id);
     return false;
 }
 
