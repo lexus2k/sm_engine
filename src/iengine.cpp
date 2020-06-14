@@ -275,11 +275,11 @@ bool ISmEngine::pushState(StateUid newState, SEventData *event)
     if (!result)
     {
         m_stack.pop();
-        ESP_LOGE(TAG, "Failed to push state: %02X", new_state);
+        ESP_LOGE(TAG, "Failed to push state: %02X", newState);
     }
     else
     {
-        ESP_LOGI(TAG, "Push state successful: %02X", new_state);
+        ESP_LOGI(TAG, "Push state successful: %02X", newState);
     }
     return result;
 }

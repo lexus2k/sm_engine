@@ -97,3 +97,7 @@ typedef struct
              TRANSITION(event_id, event_arg, func, EEventResult::PROCESSED_AND_HOOKED, SM_STATE_NONE )
 
 
+namespace sme
+{
+    static inline void NO_FUNC() { }
+}

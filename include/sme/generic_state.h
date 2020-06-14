@@ -60,7 +60,6 @@ namespace sme
     static inline void NO_ENTER(SEventData *event) { }
     static inline void NO_UPDATE() { }
     static inline void NO_EXIT(SEventData *event) { }
-    static inline void NO_FUNC() { }
     static inline C_TRANSITION_TBL(NO_TABLE)
     {
         TRANSITION_TBL_END
