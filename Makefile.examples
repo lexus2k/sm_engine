@@ -32,7 +32,7 @@
 
 OBJ_EXAMPLE1 = \
         examples/esp32_main_wrapper.o \
-        examples/switch/main/main.o \
+        examples/esp32/switch/main/main.o \
 
 example_switch: all $(OBJ_EXAMPLE1)
 	$(CXX) $(CPPFLAGS) -o switch $(OBJ_EXAMPLE1) -L. -lm -pthread -lsm_engine

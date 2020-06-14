@@ -44,7 +44,7 @@ typedef struct
 {
     ISmeState *state;
 #if SM_ENGINE_USE_STL
-    bool auto_allocated;
+    bool autoAllocated;
 #endif
 } SmStateInfo;
 

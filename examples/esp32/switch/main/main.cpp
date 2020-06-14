@@ -52,14 +52,14 @@ enum
 };
 
 // Transition table for off state
-static C_TRANSITION_TBL(state1Table)
+static C_TRANSITION_TBL(stateOffTable)
 {
     TRANSITION_SWITCH(EVENT_BUTTON_PRESS, SM_EVENT_ARG_ANY, sme::NO_FUNC, STATE_ON)
     TRANSITION_TBL_END
 }
 
 // Transition table for on state
-static C_TRANSITION_TBL(state2Table)
+static C_TRANSITION_TBL(stateOnTable)
 {
     TRANSITION_SWITCH(EVENT_BUTTON_PRESS, SM_EVENT_ARG_ANY, sme::NO_FUNC, STATE_OFF)
     TRANSITION_TBL_END
@@ -79,8 +79,8 @@ void enterOffState(SEventData *event)
 extern "C" void app_main()
 {
     // Create switch states
-    GenericState<enterOffState, sme::NO_UPDATE, sme::NO_EXIT, state1Table> stateOff(STATE_OFF);
-    GenericState<enterOnState,  sme::NO_UPDATE, sme::NO_EXIT, state2Table> stateOn(STATE_ON);
+    GenericState<enterOffState, sme::NO_UPDATE, sme::NO_EXIT, stateOffTable> stateOff(STATE_OFF);
+    GenericState<enterOnState,  sme::NO_UPDATE, sme::NO_EXIT, stateOnTable> stateOn(STATE_ON);
     SmStateInfo statesList[] =
     {
         STATE_LIST_ITEM(stateOff),

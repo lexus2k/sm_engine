@@ -80,26 +80,26 @@ public:
      * to do anything else outside state machine functions, please,
      * do not use this function. Refer to run() function instead.
      *
-     * @param event_wait_timeout_ms timeout to wait for incoming event. Do not use 0,
+     * @param eventWaitTimeoutMs timeout to wait for incoming event. Do not use 0,
      *        since loop() will occupy 100% cpu.
      */
-    void loop(uint32_t event_wait_timeout_ms);
+    void loop(uint32_t eventWaitTimeoutMs);
 
     /**
      * @brief sets event wait timeout
      *
      * If no events in state machine engine queue, then sme will wait for specified time
      *
-     * @param event_wait_timeout_ms event timeout in milliseconds
+     * @param eventWaitTimeoutMs event timeout in milliseconds
      */
-    void set_wait_event_timeout( uint32_t event_wait_timeout_ms ) { m_event_wait_timeout_ms = event_wait_timeout_ms; }
+    void setWaitEventTimeout( uint32_t eventWaitTimeoutMs ) { m_eventWaitTimeoutMs = eventWaitTimeoutMs; }
 
     /**
      * @brief Runs single iteration of state machine.
      *
      * Runs single iteration of state machine and exits.
      *
-     * @param event_wait_timeout_ms timeout to wait for incoming event. If 0, the function
+     * @param eventWaitTimeoutMs timeout to wait for incoming event. If 0, the function
      *        will return immediately.
      */
     void update() override final;
@@ -131,7 +131,7 @@ public:
     /**
      * Returns timestamp in microseconds
      */
-    virtual uint64_t get_micros();
+    virtual uint64_t getMicros();
 
     /**
      * Returns true if timeout happens after entering new state
@@ -159,7 +159,7 @@ protected:
      * The method can be used to perform additional initialization
      * before any state objects starts to work
      */
-    virtual bool on_begin();
+    virtual bool onBegin();
 
     /**
      * The method can be used to hook all events for all states
@@ -169,12 +169,12 @@ protected:
     /**
      * This method can be used to perform actions in all states.
      */
-    virtual void on_update();
+    virtual void onUpdate();
 
     /**
      * The method is called after all states are ended
      */
-    virtual void on_end();
+    virtual void onEnd();
 
 private:
     ISmeState *m_active = nullptr;
@@ -191,16 +191,16 @@ private:
     const SmStateInfo *m_states = nullptr;
 
     bool m_stopped = false;
-    uint32_t m_last_update_time_ms = 0;
-    uint64_t m_state_start_ts = 0;
-    uint32_t m_event_wait_timeout_ms = 0;
+    uint32_t m_lastUpdateTimeMs = 0;
+    uint64_t m_stateStartTs = 0;
+    uint32_t m_eventWaitTimeoutMs = 0;
     StateUid m_activeId = SM_STATE_NONE;
 
-    EEventResult process_app_event(SEventData &event);
+    EEventResult processAppEvent(SEventData &event);
 
-    void register_state(ISmeState &state, bool auto_allocated);
+    void registerState(ISmeState &state, bool autoAllocated);
 
-    void wait_for_next_event();
+    void waitForNextEvent();
 
     /**
      * @brief change current state to new one
@@ -208,9 +208,9 @@ private:
      * Changes current state to new one. For current state method exit()
      * will be called, for new state method enter() will be called.
      *
-     * @param new_state id of new state to switch to
+     * @param newState id of new state to switch to
      */
-    bool switch_state(StateUid new_state, SEventData *event);
+    bool switchState(StateUid newState, SEventData *event);
 
     /**
      * @brief change current state to new one, but stores current state
@@ -221,13 +221,13 @@ private:
      *
      * @param new_state id of new state to switch to
      */
-    bool push_state(StateUid new_state, SEventData *event);
+    bool pushState(StateUid newState, SEventData *event);
 
     /**
      * @brief returns to last stored state.
      *
      * returns to last stored state.
-     * @see push_state
+     * @see pushState
      */
-    bool pop_state(SEventData *event);
+    bool popState(SEventData *event);
 };

@@ -62,7 +62,7 @@ public:
      *
      * @param state reference to SmState-based object
      */
-    void add_state(ISmeState &state);
+    void addState(ISmeState &state);
 
 #if SM_ENGINE_USE_STL
     /**
@@ -73,19 +73,19 @@ public:
      *
      */
     template <class T>
-    void add_state(StateUid id = SM_STATE_NONE)
+    void addState(StateUid id = SM_STATE_NONE)
     {
         T *p = new T();
         if ( id != SM_STATE_NONE )
         {
             p->setId( id );
         }
-        register_state( *p, true );
+        registerState( *p, true );
     }
 #endif
 
 private:
     sme::vector<SmStateInfo> m_states{};
 
-    void register_state(ISmeState &state, bool auto_allocated);
+    void registerState(ISmeState &state, bool auto_allocated);
 };

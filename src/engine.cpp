@@ -46,18 +46,18 @@ SmEngine::~SmEngine()
     m_states.clear();
 }
 
-void SmEngine::add_state(ISmeState &state)
+void SmEngine::addState(ISmeState &state)
 {
-    register_state( state, false );
+    registerState( state, false );
 }
 
-void SmEngine::register_state(ISmeState &state, bool auto_allocated)
+void SmEngine::registerState(ISmeState &state, bool autoAllocated)
 {
     SmStateInfo info =
     {
         .state = &state,
 #if SM_ENGINE_USE_STL
-        .auto_allocated = auto_allocated
+        .autoAllocated = autoAllocated
 #endif
     };
     state.setParent( this );

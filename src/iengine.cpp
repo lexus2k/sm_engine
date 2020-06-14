@@ -47,7 +47,7 @@ ISmEngine::~ISmEngine()
     while ( state->state != nullptr )
     {
 #if SM_ENGINE_DYNAMIC_ALLOC
-        if (state->auto_allocated)
+        if (state->autoAllocated)
         {
             delete state->state;
         }
@@ -84,16 +84,16 @@ bool ISmEngine::sendEvent(SEventData event, uint32_t ms)
     return true;
 }
 
-void ISmEngine::loop(uint32_t event_wait_timeout_ms)
+void ISmEngine::loop(uint32_t eventWaitTimeoutMs)
 {
-    set_wait_event_timeout( event_wait_timeout_ms );
+    setWaitEventTimeout( eventWaitTimeoutMs );
     while (!m_stopped)
     {
         update();
     }
 }
 
-EEventResult ISmEngine::process_app_event(SEventData &event)
+EEventResult ISmEngine::processAppEvent(SEventData &event)
 {
     ESP_LOGD( TAG, "Processing event: %02X", event.event );
     STransitionData status = onEvent( event );
@@ -110,20 +110,20 @@ EEventResult ISmEngine::process_app_event(SEventData &event)
     {
         switch ( status.result )
         {
-            case EEventResult::SWITCH_STATE: switch_state( status.stateId, &event ); break;
-            case EEventResult::PUSH_STATE: push_state( status.stateId, &event ); break;
-            case EEventResult::POP_STATE: pop_state( &event ); break;
+            case EEventResult::SWITCH_STATE: switchState( status.stateId, &event ); break;
+            case EEventResult::PUSH_STATE: pushState( status.stateId, &event ); break;
+            case EEventResult::POP_STATE: popState( &event ); break;
             default: break;
         };
     }
     return status.result;
 }
 
-void ISmEngine::wait_for_next_event()
+void ISmEngine::waitForNextEvent()
 {
 #if SM_ENGINE_MULTITHREAD
     std::unique_lock<std::mutex> lock( m_mutex );
-    m_cond.wait_for( lock, std::chrono::milliseconds( m_event_wait_timeout_ms ),
+    m_cond.wait_for( lock, std::chrono::milliseconds( m_eventWaitTimeoutMs ),
                      [this]()->bool{ return m_events.size() > 0; } );
 #endif
 }
@@ -131,20 +131,20 @@ void ISmEngine::wait_for_next_event()
 
 void ISmEngine::update()
 {
-    on_update();
+    onUpdate();
 
-    wait_for_next_event();
+    waitForNextEvent();
 
-    uint32_t ts = get_micros();
-    uint32_t delta = static_cast<uint32_t>( ts - m_last_update_time_ms );
-    m_last_update_time_ms = ts;
+    uint32_t ts = getMicros();
+    uint32_t delta = static_cast<uint32_t>( ts - m_lastUpdateTimeMs );
+    m_lastUpdateTimeMs = ts;
 
     auto it = m_events.begin();
     while ( it != m_events.end() )
     {
         if ( it->micros <= delta )
         {
-            process_app_event( it->event );
+            processAppEvent( it->event );
 #if SM_ENGINE_MULTITHREAD
             std::unique_lock<std::mutex> lock( m_mutex );
 #endif
@@ -167,13 +167,13 @@ STransitionData ISmEngine::onEvent(SEventData event)
     return { EEventResult::NOT_PROCESSED, SM_STATE_ANY };
 }
 
-void ISmEngine::on_update()
+void ISmEngine::onUpdate()
 {
 }
 
 bool ISmEngine::begin()
 {
-    bool result = on_begin();
+    bool result = onBegin();
     if ( result )
     {
         const SmStateInfo * state = m_states;
@@ -187,7 +187,7 @@ bool ISmEngine::begin()
             state++;
         }
     }
-    m_last_update_time_ms = get_micros();
+    m_lastUpdateTimeMs = getMicros();
     m_stopped = false;
     return result;
 }
@@ -197,12 +197,12 @@ bool ISmEngine::begin( StateUid id )
     bool result = begin();
     if ( result )
     {
-        result = switch_state( id, nullptr );
+        result = switchState( id, nullptr );
     }
     return result;
 }
 
-bool ISmEngine::on_begin()
+bool ISmEngine::onBegin()
 {
     return true;
 }
@@ -219,10 +219,10 @@ void ISmEngine::end()
         state->state->end();
         state++;
     };
-    on_end();
+    onEnd();
 }
 
-void ISmEngine::on_end()
+void ISmEngine::onEnd()
 {
 }
 
@@ -240,7 +240,7 @@ ISmeState *ISmEngine::getById(StateUid id)
     return nullptr;
 }
 
-bool ISmEngine::switch_state(StateUid id, SEventData *event)
+bool ISmEngine::switchState(StateUid id, SEventData *event)
 {
     if ( id == SM_STATE_NONE )
     {
@@ -260,7 +260,7 @@ bool ISmEngine::switch_state(StateUid id, SEventData *event)
         ESP_LOGI(TAG, "Switching to state %s", newState->getName());
         m_active = newState;
 
-        m_state_start_ts = get_micros();
+        m_stateStartTs = getMicros();
         m_active->enter( event );
         m_activeId = id;
         return true;
@@ -268,10 +268,10 @@ bool ISmEngine::switch_state(StateUid id, SEventData *event)
     return false;
 }
 
-bool ISmEngine::push_state(StateUid new_state, SEventData *event)
+bool ISmEngine::pushState(StateUid newState, SEventData *event)
 {
     m_stack.push(m_active);
-    bool result = switch_state(new_state, event);
+    bool result = switchState(newState, event);
     if (!result)
     {
         m_stack.pop();
@@ -284,14 +284,14 @@ bool ISmEngine::push_state(StateUid new_state, SEventData *event)
     return result;
 }
 
-bool ISmEngine::pop_state(SEventData *event)
+bool ISmEngine::popState(SEventData *event)
 {
     bool result = false;
     if (!m_stack.empty())
     {
         auto state = m_stack.top();
         m_stack.pop();
-        result = switch_state( state->getId(), event );
+        result = switchState( state->getId(), event );
         if (!result)
         {
             m_stack.push(state);
@@ -304,7 +304,7 @@ bool ISmEngine::pop_state(SEventData *event)
     return result;
 }
 
-uint64_t ISmEngine::get_micros()
+uint64_t ISmEngine::getMicros()
 {
 #if SM_ENGINE_USE_STL
     return std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()).time_since_epoch().count();
@@ -313,10 +313,10 @@ uint64_t ISmEngine::get_micros()
 #endif
 }
 
-bool ISmEngine::timeoutEvent(uint64_t timeout, bool generate_event)
+bool ISmEngine::timeoutEvent(uint64_t timeout, bool generateEvent)
 {
-    bool event = static_cast<uint64_t>( get_micros() - m_state_start_ts ) >= timeout;
-    if ( event && generate_event )
+    bool event = static_cast<uint64_t>( getMicros() - m_stateStartTs ) >= timeout;
+    if ( event && generateEvent )
     {
          sendEvent( { SM_EVENT_TIMEOUT, static_cast<uintptr_t>(timeout) } );
     }
@@ -325,7 +325,7 @@ bool ISmEngine::timeoutEvent(uint64_t timeout, bool generate_event)
 
 void ISmEngine::resetTimeout()
 {
-    m_state_start_ts = get_micros();
+    m_stateStartTs = getMicros();
 }
 
 
