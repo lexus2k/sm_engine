@@ -46,7 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define SM_FUNC_NONE
 
-#define SM_STATE(state,id) add_state<state>(id)
+#define SM_STATE(state,id) addState<state>(id)
 
 class ISmEngine: public ISmeState
 {
