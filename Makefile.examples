@@ -28,18 +28,27 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-.PHONY: example_switch clean_examples examples
+.PHONY: example_switch example_switch2 clean_examples examples
 
 OBJ_EXAMPLE1 = \
         examples/esp32_main_wrapper.o \
         examples/esp32/switch/main/main.o \
 
+OBJ_EXAMPLE2 = \
+        examples/esp32_main_wrapper.o \
+        examples/esp32/switch2/main/main.o \
+
+OBJ_EXAMPLES += $(OBJ_EXAMPLE1) $(OBJ_EXAMPLE2)
+
 example_switch: all $(OBJ_EXAMPLE1)
 	$(CXX) $(CPPFLAGS) -o switch $(OBJ_EXAMPLE1) -L. -lm -pthread -lsm_engine
 
-examples: example_switch
+example_switch2: all $(OBJ_EXAMPLE2)
+	$(CXX) $(CPPFLAGS) -o switch2 $(OBJ_EXAMPLE2) -L. -lm -pthread -lsm_engine
+
+examples: example_switch example_switch2
 
 clean: clean_examples
 
 clean_examples:
-	rm -rf $(OBJ_EXAMPLE1) $(OBJ_EXAMPLE1:.o=.gcno) $(OBJ_EXAMPLE1:.o=.gcda) ./switch
+	rm -rf $(OBJ_EXAMPLES) $(OBJ_EXAMPLES:.o=.gcno) $(OBJ_EXAMPLES:.o=.gcda) ./switch ./switch2
